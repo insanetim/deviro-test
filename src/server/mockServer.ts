@@ -14,12 +14,13 @@ class MockServer {
   private updateInterval: number | null = null
   private isRunning: boolean = false
   private targetCounter: number = 0
-  private readonly UPDATE_INTERVAL_MS = 1000
+  private lastUpdateTime: number = 0
+  private readonly UPDATE_INTERVAL_MS = 500
   private readonly AREA_SIZE = 1000
   private readonly SPEED = {
     MIN: 1,
     MAX: 20,
-    DEFAULT: 10,
+    DEFAULT: 5,
   }
   private readonly TARGETS = {
     MIN: 1,
@@ -45,18 +46,24 @@ class MockServer {
       id: `t_${Date.now()}_${++this.targetCounter}`,
       x: randomInteger(0, this.AREA_SIZE),
       y: randomInteger(0, this.AREA_SIZE),
-      speed: speed * (1 + randomInteger(-30, 30) / 100),
+      speed: speed * (1 + randomInteger(-30, 30) / 100), // Add some randomness
       angle: randomInteger(0, 359),
     }
   }
 
   private updateTargets() {
+    const now = Date.now()
+    const deltaTimeMs = this.lastUpdateTime ? now - this.lastUpdateTime : 0
+    this.lastUpdateTime = now
+
     this.targets = this.targets.filter(() => !chance(1))
 
     this.targets = this.targets.map(target => {
       const angleInRadians = toRadians(target.angle)
-      const dx = Math.cos(angleInRadians) * target.speed
-      const dy = Math.sin(angleInRadians) * target.speed
+      // Calculate movement based on speed (units per second) and actual time passed
+      const distance = target.speed * (deltaTimeMs / 1000)
+      const dx = Math.cos(angleInRadians) * distance
+      const dy = Math.sin(angleInRadians) * distance
 
       let newX = target.x + dx
       let newY = target.y + dy
@@ -64,40 +71,37 @@ class MockServer {
 
       const maxX = this.AREA_SIZE
       const maxY = this.AREA_SIZE
-      let bouncedHorizontally = false
-      let bouncedVertically = false
+      let bounced = false
 
-      // Проверка столкновения с горизонтальными границами
+      // Check collision with horizontal boundaries
       if (newX < 0) {
         newX = Math.abs(newX)
-        bouncedHorizontally = true
+        newAngle = 180 - target.angle
+        bounced = true
       } else if (newX > maxX) {
         newX = maxX - (newX - maxX)
-        bouncedHorizontally = true
+        newAngle = 180 - target.angle
+        bounced = true
       }
 
-      // Проверка столкновения с вертикальными границами
+      // Check collision with vertical boundaries
       if (newY < 0) {
         newY = Math.abs(newY)
-        bouncedVertically = true
+        newAngle = -target.angle
+        bounced = true
       } else if (newY > maxY) {
         newY = maxY - (newY - maxY)
-        bouncedVertically = true
-      }
-
-      // Обновление угла при отражении
-      if (bouncedHorizontally) {
-        newAngle = 180 - target.angle
-      }
-      if (bouncedVertically) {
         newAngle = -target.angle
+        bounced = true
       }
 
-      // Нормализация угла к диапазону 0-359 градусов
+      // Angle is updated during collision checks
+
+      // Normalize angle to 0-359 degrees
       newAngle = ((newAngle % 360) + 360) % 360
 
-      // 30% шанс на случайное изменение угла после отражения
-      if ((bouncedHorizontally || bouncedVertically) && chance(30)) {
+      // 30% chance to randomly change angle after bounce
+      if (bounced !== null && chance(30)) {
         newAngle += randomInteger(-25, 25) / 10
         newAngle = ((newAngle % 360) + 360) % 360
       }
@@ -142,6 +146,7 @@ class MockServer {
       this.initializeTargets(initialTargets, initialSpeed)
 
       this.isRunning = true
+      this.lastUpdateTime = Date.now()
       this.updateInterval = window.setInterval(() => {
         this.updateTargets()
       }, this.UPDATE_INTERVAL_MS)
