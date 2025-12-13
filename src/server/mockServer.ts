@@ -2,6 +2,7 @@ import type { ServerResponse, Target } from "../types"
 
 // Helper functions
 const toRadians = (degrees: number) => degrees * (Math.PI / 180)
+const normalizeAngle = (angle: number): number => ((angle % 360) + 360) % 360
 const chance = (percent: number): boolean => Math.random() * 100 < percent
 const randomInteger = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min
@@ -73,37 +74,35 @@ class MockServer {
       const maxY = this.AREA_SIZE
       let bounced = false
 
-      // Check collision with horizontal boundaries
+      // Check collision with horizontal boundaries (left/right)
       if (newX < 0) {
         newX = Math.abs(newX)
-        newAngle = 180 - target.angle
+        newAngle = normalizeAngle(180 - target.angle)
         bounced = true
       } else if (newX > maxX) {
         newX = maxX - (newX - maxX)
-        newAngle = 180 - target.angle
+        newAngle = normalizeAngle(180 - target.angle)
         bounced = true
       }
 
-      // Check collision with vertical boundaries
+      // Check collision with vertical boundaries (top/bottom)
       if (newY < 0) {
         newY = Math.abs(newY)
-        newAngle = -target.angle
+        newAngle = normalizeAngle(-target.angle)
         bounced = true
       } else if (newY > maxY) {
         newY = maxY - (newY - maxY)
-        newAngle = -target.angle
+        newAngle = normalizeAngle(-target.angle)
         bounced = true
       }
 
       // Angle is updated during collision checks
 
-      // Normalize angle to 0-359 degrees
-      newAngle = ((newAngle % 360) + 360) % 360
-
       // 30% chance to randomly change angle after bounce
-      if (bounced !== null && chance(30)) {
-        newAngle += randomInteger(-25, 25) / 10
-        newAngle = ((newAngle % 360) + 360) % 360
+      if (bounced && chance(30)) {
+        newAngle = normalizeAngle(newAngle + randomInteger(-25, 25) / 10)
+      } else {
+        newAngle = normalizeAngle(newAngle)
       }
 
       return {

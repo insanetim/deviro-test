@@ -66,7 +66,6 @@ const AuthView = () => {
             error={!!error}
             helperText={error}
             autoComplete="off"
-            autoFocus
           />
 
           <Button
@@ -83,7 +82,6 @@ const AuthView = () => {
               "&.Mui-disabled": {
                 backgroundColor: "action.disabledBackground",
                 color: "text.disabled",
-                cursor: "default",
               },
             }}
           >
