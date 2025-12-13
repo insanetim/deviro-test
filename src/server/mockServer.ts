@@ -11,7 +11,7 @@ const randomDelay = (min: number = 100, max: number = 500) =>
 
 class MockServer {
   private targets: Target[] = []
-  private updateInterval: number | null = null // Используем number для браузера
+  private updateInterval: number | null = null
   private isRunning: boolean = false
   private targetCounter: number = 0
   private readonly UPDATE_INTERVAL_MS = 1000
@@ -121,7 +121,6 @@ class MockServer {
       throw new Error("Server is already running")
     }
 
-    // Валидация входных параметров
     if (
       initialTargets < this.TARGETS.MIN ||
       initialTargets > this.TARGETS.MAX
@@ -138,14 +137,12 @@ class MockServer {
     }
 
     try {
-      // Очищаем существующие цели и инициализируем с новыми параметрами
       this.targets = []
       this.targetCounter = 0
       this.initializeTargets(initialTargets, initialSpeed)
 
       this.isRunning = true
       this.updateInterval = window.setInterval(() => {
-        // Используем window.setInterval для браузера
         this.updateTargets()
       }, this.UPDATE_INTERVAL_MS)
 
@@ -195,7 +192,6 @@ class MockServer {
   }
 }
 
-// Создаем и экспортируем синглтон-экземпляр
 const mockServer = new MockServer()
 
 /**
