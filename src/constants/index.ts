@@ -1,1 +1,1 @@
-export const ACCESS_KEY = crypto.randomUUID()
+export const ACCESS_CODE = crypto.randomUUID()

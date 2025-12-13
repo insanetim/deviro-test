@@ -1,24 +1,19 @@
 import { CssBaseline } from "@mui/material"
-import { createTheme, ThemeProvider } from "@mui/material/styles"
+import { ThemeProvider } from "@mui/material/styles"
+import { observer } from "mobx-react-lite"
 import MainLayout from "./layouts/MainLayout"
+import { authStore } from "./stores/AuthStore"
+import { darkTheme } from "./theme"
+import AuthView from "./views/AuthView"
+import MapView from "./views/MapView"
 
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-})
-
-const App = () => {
+const App = observer(() => {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <MainLayout>
-        <div>
-          <h1>Top Secret Project</h1>
-        </div>
-      </MainLayout>
+      <MainLayout>{authStore.isAuth ? <MapView /> : <AuthView />}</MainLayout>
     </ThemeProvider>
   )
-}
+})
 
 export default App
