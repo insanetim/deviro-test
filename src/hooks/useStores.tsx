@@ -1,19 +1,5 @@
-import { createContext, useContext, type ReactNode } from "react"
-import { RootStore } from "../stores"
-
-interface StoreProviderProps {
-  children: ReactNode
-}
-
-export const StoreContext = createContext<RootStore | undefined>(undefined)
-
-export const StoreProvider = ({ children }: StoreProviderProps) => {
-  const rootStore = new RootStore()
-
-  return (
-    <StoreContext.Provider value={rootStore}>{children}</StoreContext.Provider>
-  )
-}
+import { useContext } from "react"
+import { StoreContext } from "../contexts/StoreContext"
 
 export const useStores = () => {
   const context = useContext(StoreContext)

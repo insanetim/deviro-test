@@ -41,8 +41,6 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    console.log("here")
-
     e.preventDefault()
     onSubmit({
       targetCount,
