@@ -1,15 +1,14 @@
-import { Button, Paper, Slider, Stack, Typography } from "@mui/material"
+import { Paper, Slider, Stack, Typography } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import React, { useState } from "react"
-import { useStores } from "../hooks/useStores"
 import type { MapOptions } from "../views/MapView"
+import { ControlButton } from "./ControlButton"
 
 interface ControlPanelProps {
   onSubmit: (options: MapOptions) => void
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
-  const { targetsStore } = useStores()
   const [targetCount, setTargetCount] = useState<number>(100)
   const [speed, setSpeed] = useState<number>(10)
   const [offlineTimeout, setOfflineTimeout] = useState<number>(10)
@@ -126,16 +125,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
         </Stack>
 
         <Stack width="20%">
-          <Button
-            type="submit"
-            variant={targetsStore.serverIsRunning ? "outlined" : "contained"}
-            color="primary"
-            fullWidth
-            size="large"
-            sx={{ fontWeight: "bold" }}
-          >
-            {targetsStore.serverIsRunning ? "Stop" : "Start"}
-          </Button>
+          <ControlButton />
         </Stack>
       </Stack>
     </Paper>
