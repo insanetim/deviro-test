@@ -1,21 +1,17 @@
-import { makeAutoObservable } from 'mobx';
+import { makeAutoObservable } from "mobx"
 
 export class AuthStore {
-  isAuth = false;
+  isAuth: boolean = false
 
   constructor() {
-    makeAutoObservable(this);
+    makeAutoObservable(this)
   }
 
   login = () => {
-    this.isAuth = true;
-  };
+    this.isAuth = true
+  }
 
   logout = () => {
-    this.isAuth = false;
-  };
+    this.isAuth = false
+  }
 }
-
-export const authStore = new AuthStore();
-
-export default AuthStore;

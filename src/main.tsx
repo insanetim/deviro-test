@@ -1,9 +1,16 @@
+import { ThemeProvider } from "@mui/material/styles"
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import App from "./App.tsx"
+import { StoreProvider } from "./hooks/useStores.tsx"
+import { darkTheme } from "./theme.ts"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <StoreProvider>
+      <ThemeProvider theme={darkTheme}>
+        <App />
+      </ThemeProvider>
+    </StoreProvider>
   </StrictMode>
 )

@@ -6,11 +6,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material"
+import { observer } from "mobx-react-lite"
 import { useState } from "react"
 import { ACCESS_CODE } from "../constants"
-import { authStore } from "../stores/AuthStore"
+import { useStores } from "../hooks/useStores"
 
-const AuthView = () => {
+const AuthView = observer(() => {
+  const { authStore } = useStores()
   const [code, setCode] = useState("")
   const [error, setError] = useState("")
 
@@ -91,6 +93,6 @@ const AuthView = () => {
       </CardContent>
     </Card>
   )
-}
+})
 
 export default AuthView

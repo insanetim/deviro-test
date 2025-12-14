@@ -1,18 +1,14 @@
-import { CssBaseline } from "@mui/material"
-import { ThemeProvider } from "@mui/material/styles"
 import { observer } from "mobx-react-lite"
+import { useStores } from "./hooks/useStores"
 import MainLayout from "./layouts/MainLayout"
-import { authStore } from "./stores/AuthStore"
-import { darkTheme } from "./theme"
 import AuthView from "./views/AuthView"
 import MapView from "./views/MapView"
 
 const App = observer(() => {
+  const { authStore } = useStores()
+
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
-      <MainLayout>{authStore.isAuth ? <MapView /> : <AuthView />}</MainLayout>
-    </ThemeProvider>
+    <MainLayout>{authStore.isAuth ? <MapView /> : <AuthView />}</MainLayout>
   )
 })
 

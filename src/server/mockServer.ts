@@ -17,7 +17,7 @@ class MockServer {
   private targetCounter: number = 0
   private lastUpdateTime: number = 0
   private readonly UPDATE_INTERVAL_MS = 500
-  private readonly AREA_SIZE = 1000
+  private readonly AREA_SIZE = 800
   private readonly SPEED = {
     MIN: 1,
     MAX: 20,

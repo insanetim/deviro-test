@@ -1,20 +1,15 @@
-import { createContext, useContext } from 'react';
-import { AuthStore } from './AuthStore';
+import { makeAutoObservable } from "mobx"
+import { AuthStore } from "./AuthStore"
+import { TargetsStore } from "./TargetsStore"
 
-// Create a context for the root store
-class RootStore {
-  authStore: AuthStore;
+export class RootStore {
+  authStore: AuthStore
+  targetsStore: TargetsStore
 
   constructor() {
-    this.authStore = new AuthStore();
+    this.authStore = new AuthStore()
+    this.targetsStore = new TargetsStore()
+
+    makeAutoObservable(this)
   }
 }
-
-const rootStore = new RootStore();
-
-export const StoreContext = createContext<RootStore>(rootStore);
-
-// Create a hook to use the root store
-export const useStore = () => useContext(StoreContext);
-
-export default rootStore;
