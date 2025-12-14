@@ -8,45 +8,33 @@ const Map = () => {
   const [isPanning, setIsPanning] = useState(false)
   const [startPos, setStartPos] = useState({ x: 0, y: 0 })
 
-  const minScale = 1
-  const maxScale = 3
-  const zoomStep = 0.5
-  const canvasWidth = 800
-  const canvasHeight = 800
+  // Единые размеры для всего
+  const size = 800
+  const minScale = 0.5
+  const maxScale = 5
+  const zoomStep = 0.2
 
   // Ограничение позиции, чтобы не показывать фон
   const clampPosition = useCallback(
     (x: number, y: number, currentScale: number) => {
-      if (!containerRef.current) return { x: 0, y: 0 }
+      // Размер карты с учетом масштаба
+      const scaledSize = size * currentScale
 
-      const containerWidth = 800
-      const containerHeight = 800
-
-      // Максимально допустимые смещения
-      const scaledWidth = canvasWidth * currentScale
-      const scaledHeight = canvasHeight * currentScale
-
-      // Если изображение меньше контейнера, центрируем
-      if (scaledWidth <= containerWidth) {
-        x = -(containerWidth - scaledWidth) / 2
-      } else {
-        // Ограничиваем, чтобы не показывать края
-        const maxX = 0
-        const minX = containerWidth - scaledWidth
-        x = Math.max(minX, Math.min(maxX, x))
+      // 1. Если карта МЕНЬШЕ контейнера → центрируем
+      if (scaledSize <= size) {
+        const centered = (size - scaledSize) / 2
+        return { x: centered, y: centered }
       }
 
-      if (scaledHeight <= containerHeight) {
-        y = -(containerHeight - scaledHeight) / 2
-      } else {
-        const maxY = 0
-        const minY = containerHeight - scaledHeight
-        y = Math.max(minY, Math.min(maxY, y))
-      }
+      // 2. Если карта БОЛЬШЕ контейнера → ограничиваем панорамирование
+      // Вычисляем границы перемещения
+      const minOffset = size - scaledSize // отрицательное значение
+      const clampedX = Math.max(minOffset, Math.min(0, x))
+      const clampedY = Math.max(minOffset, Math.min(0, y))
 
-      return { x, y }
+      return { x: clampedX, y: clampedY }
     },
-    []
+    [size]
   )
 
   // Зум с ограничением позиции
@@ -57,38 +45,36 @@ const Map = () => {
           ? Math.min(prevScale + zoomStep, maxScale)
           : Math.max(prevScale - zoomStep, minScale)
 
-        // Пересчитываем позицию с учетом нового масштаба
-        const container = containerRef.current
-        if (!container) return newScale
+        // Если контейнер еще не доступен, просто меняем scale
+        if (!containerRef.current) return newScale
 
-        const rect = container.getBoundingClientRect()
-        const centerX = rect.width / 2
-        const centerY = rect.height / 2
+        // Центр контейнера
+        const center = size / 2
 
-        // Преобразуем координаты центра в мировые
-        const worldX = (centerX - position.x) / prevScale
-        const worldY = (centerY - position.y) / prevScale
+        // Преобразуем координаты центра контейнера в мировые координаты карты
+        const worldCoord = (center - position.x) / prevScale
 
-        // Вычисляем новую позицию для сохранения центра
-        const newX = centerX - worldX * newScale
-        const newY = centerY - worldY * newScale
+        // Вычисляем новую позицию для сохранения этой точки в центре
+        const newPos = center - worldCoord * newScale
 
         // Ограничиваем позицию
-        const clamped = clampPosition(newX, newY, newScale)
+        const clamped = clampPosition(newPos, newPos, newScale)
         setPosition(clamped)
 
         return newScale
       })
     },
-    [position, clampPosition]
+    [position, clampPosition, size]
   )
 
   const handleZoomIn = () => handleZoom(true)
   const handleZoomOut = () => handleZoom(false)
 
   const handleResetView = () => {
+    // При сбросе центрируем карту
+    const clamped = clampPosition(0, 0, 1)
     setScale(1)
-    setPosition({ x: 0, y: 0 })
+    setPosition(clamped)
   }
 
   // Панорамирование
@@ -120,8 +106,8 @@ const Map = () => {
     <Box
       ref={containerRef}
       sx={{
-        width: "800px",
-        height: "800px",
+        width: `${size}px`,
+        height: `${size}px`,
         bgcolor: "black",
         borderRadius: 1,
         overflow: "hidden",
@@ -139,14 +125,8 @@ const Map = () => {
           position: "absolute",
           transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
           transformOrigin: "0 0",
-          width: `${canvasWidth}px`,
-          height: `${canvasHeight}px`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#999",
-          fontSize: "16px",
-          fontFamily: "Arial, sans-serif",
+          width: `${size}px`,
+          height: `${size}px`,
         }}
       >
         <div
@@ -159,8 +139,10 @@ const Map = () => {
             backgroundRepeat: "no-repeat",
             pointerEvents: "none",
             userSelect: "none",
+            WebkitUserSelect: "none",
+            msUserSelect: "none",
           }}
-        ></div>
+        />
       </Box>
 
       {/* Кнопки управления */}
@@ -197,7 +179,7 @@ const Map = () => {
             onClick={handleResetView}
             title="Сбросить вид"
           >
-            ресет
+            reset
           </Button>
         </ButtonGroup>
       </Box>
