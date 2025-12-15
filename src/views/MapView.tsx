@@ -3,11 +3,9 @@ import { observer } from "mobx-react-lite"
 import { useCallback, useRef } from "react"
 import ControlPanel from "../components/ControlPanel"
 import Map from "../components/Map"
+import { POLLING_INTERVAL } from "../constants"
 import { useStores } from "../hooks/useStores"
 import type { MapOptions } from "../types"
-
-// Polling interval in milliseconds
-const POLLING_INTERVAL = 1000
 
 const MapView = observer(() => {
   const { targetsStore } = useStores()

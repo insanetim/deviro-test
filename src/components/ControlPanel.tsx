@@ -1,6 +1,7 @@
 import { Paper, Slider, Stack, Typography } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import React, { useState } from "react"
+import { SIMULATION } from "../constants"
 import type { MapOptions } from "../types"
 import { ControlButton } from "./ControlButton"
 
@@ -9,9 +10,9 @@ interface ControlPanelProps {
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
-  const [count, setCount] = useState<number>(100)
-  const [speed, setSpeed] = useState<number>(10)
-  const [offlineTimeout, setOfflineTimeout] = useState<number>(10)
+  const [count, setCount] = useState<number>(SIMULATION.TARGETS.DEFAULT)
+  const [speed, setSpeed] = useState<number>(SIMULATION.SPEED.DEFAULT)
+  const [offlineTimeout, setOfflineTimeout] = useState<number>(60)
 
   const handleOfflineTimeoutChange = (
     _: Event,
@@ -77,8 +78,8 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
             <Slider
               size="small"
               step={1}
-              min={1}
-              max={200}
+              min={SIMULATION.TARGETS.MIN}
+              max={SIMULATION.TARGETS.MAX}
               value={count}
               onChange={handleTargetCountChange}
             />
@@ -95,8 +96,8 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
             <Slider
               size="small"
               step={1}
-              min={1}
-              max={20}
+              min={SIMULATION.SPEED.MIN}
+              max={SIMULATION.SPEED.MAX}
               value={speed}
               onChange={handleSpeedChange}
             />

@@ -12,7 +12,7 @@ const normalizeTargets = (targets: Target[]): Record<Target["id"], Target> => {
 export class TargetsStore {
   serverIsRunning: boolean = false
   targets: Record<Target["id"], ExTarget> = {}
-  offlineTimeout: number = 300000
+  offlineTimeout: number = 60000
 
   // For server operations (start/stop)
   isLoading: boolean = false

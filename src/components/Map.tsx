@@ -1,6 +1,7 @@
 import { Box } from "@mui/material"
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch"
 import map from "../assets/map.jpg"
+import { SIMULATION } from "../constants"
 import MapControls from "./MapControls"
 import Targets from "./Targets"
 
@@ -8,7 +9,7 @@ interface MapProps {
   size?: number
 }
 
-const Map: React.FC<MapProps> = ({ size = 800 }) => {
+const Map: React.FC<MapProps> = ({ size = SIMULATION.AREA_SIZE }) => {
   return (
     <Box
       sx={{

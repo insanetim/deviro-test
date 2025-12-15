@@ -1,3 +1,4 @@
+import { SIMULATION } from "../constants"
 import type { ServerResponse, StartServerParams, Target } from "../types"
 
 // Helper functions
@@ -7,7 +8,7 @@ const chance = (percent: number): boolean => Math.random() * 100 < percent
 const randomInteger = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-const randomDelay = (min: number = 100, max: number = 500) =>
+const randomDelay = (min: number = 100, max: number = 200) =>
   wait(randomInteger(min, max))
 
 class MockServer {
@@ -16,18 +17,11 @@ class MockServer {
   private isRunning: boolean = false
   private targetCounter: number = 0
   private lastUpdateTime: number = 0
-  private readonly UPDATE_INTERVAL_MS = 500
-  private readonly AREA_SIZE = 800
-  private readonly SPEED = {
-    MIN: 1,
-    MAX: 20,
-    DEFAULT: 5,
-  }
-  private readonly TARGETS = {
-    MIN: 1,
-    MAX: 200,
-    DEFAULT: 50,
-  }
+  private lastFilterTime: number = 0
+  private readonly UPDATE_INTERVAL_MS = SIMULATION.UPDATE_INTERVAL_MS
+  private readonly AREA_SIZE = SIMULATION.AREA_SIZE
+  private readonly SPEED = SIMULATION.SPEED
+  private readonly TARGETS = SIMULATION.TARGETS
 
   constructor() {
     this.targets = []
@@ -57,7 +51,11 @@ class MockServer {
     const deltaTimeMs = this.lastUpdateTime ? now - this.lastUpdateTime : 0
     this.lastUpdateTime = now
 
-    this.targets = this.targets.filter(() => !chance(1))
+    // Filter targets at specified interval
+    if (now - this.lastFilterTime > SIMULATION.FILTER_INTERVAL_MS) {
+      this.targets = this.targets.filter(() => !chance(1))
+      this.lastFilterTime = now
+    }
 
     this.targets = this.targets.map(target => {
       const angleInRadians = toRadians(target.angle)
