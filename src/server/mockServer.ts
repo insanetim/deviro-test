@@ -8,40 +8,45 @@ const chance = (percent: number): boolean => Math.random() * 100 < percent
 const randomInteger = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-const randomDelay = (min: number = 10, max: number = 20) =>
-  wait(randomInteger(min, max))
+const withRandomness = (value: number, percent: number) =>
+  value * (1 + randomInteger(-percent, percent) / 100)
 
 class MockServer {
-  private targets: Target[] = []
-  private updateInterval: number | null = null
   private isRunning: boolean = false
+  private updateInterval: number | null = null
+  private readonly UPDATE_INTERVAL_MS = SIMULATION.UPDATE_INTERVAL_MS
+  private latency: number = SIMULATION.LATENCY.DEFAULT
+  private targets: Target[] = []
   private targetCounter: number = 0
   private lastUpdateTime: number = 0
   private lastFilterTime: number = 0
-  private readonly UPDATE_INTERVAL_MS = SIMULATION.UPDATE_INTERVAL_MS
-  private readonly AREA_SIZE = SIMULATION.AREA_SIZE
-  private readonly SPEED = SIMULATION.SPEED
-  private readonly TARGETS = SIMULATION.TARGETS
+  private readonly areaSize = SIMULATION.AREA_SIZE
+  private readonly speed = SIMULATION.SPEED
+  private readonly targetsCount = SIMULATION.TARGETS
 
   constructor() {
     this.targets = []
   }
 
+  private async serverDelay() {
+    return wait(withRandomness(this.latency, 25))
+  }
+
   private initializeTargets({
-    count = this.TARGETS.DEFAULT,
-    speed = this.SPEED.DEFAULT,
+    count = this.targetsCount.DEFAULT,
+    speed = this.speed.DEFAULT,
   }: StartServerParams = {}) {
     for (let i = 0; i < count; i++) {
       this.targets.push(this.createRandomTarget(speed))
     }
   }
 
-  private createRandomTarget(speed: number = this.SPEED.DEFAULT): Target {
+  private createRandomTarget(speed: number = this.speed.DEFAULT): Target {
     return {
       id: `t_${Date.now()}_${++this.targetCounter}`,
-      x: randomInteger(0, this.AREA_SIZE),
-      y: randomInteger(0, this.AREA_SIZE),
-      speed: speed * (1 + randomInteger(-30, 30) / 100), // Add some randomness
+      x: randomInteger(0, this.areaSize),
+      y: randomInteger(0, this.areaSize),
+      speed: withRandomness(speed, 30), // Add some randomness
       angle: randomInteger(0, 359),
     }
   }
@@ -68,8 +73,8 @@ class MockServer {
       let newY = target.y + dy
       let newAngle = target.angle
 
-      const maxX = this.AREA_SIZE
-      const maxY = this.AREA_SIZE
+      const maxX = this.areaSize
+      const maxY = this.areaSize
       let bounced = false
 
       // Check collision with horizontal boundaries (left/right)
@@ -98,7 +103,7 @@ class MockServer {
 
       // 30% chance to randomly change angle after bounce
       if (bounced && chance(30)) {
-        newAngle = normalizeAngle(newAngle + randomInteger(-25, 25) / 10)
+        newAngle = normalizeAngle(withRandomness(newAngle, 2.5))
       } else {
         newAngle = normalizeAngle(newAngle)
       }
@@ -113,24 +118,31 @@ class MockServer {
   }
 
   public async start({
-    count = this.TARGETS.DEFAULT,
-    speed = this.SPEED.DEFAULT,
+    count = this.targetsCount.DEFAULT,
+    speed = this.speed.DEFAULT,
+    latency = this.latency,
   }: StartServerParams = {}): ServerResponse {
-    await randomDelay()
+    await this.serverDelay()
 
     if (this.isRunning) {
       throw new Error("Server is already running")
     }
 
-    if (count < this.TARGETS.MIN || count > this.TARGETS.MAX) {
+    if (count < this.targetsCount.MIN || count > this.targetsCount.MAX) {
       throw new Error(
-        `Targets count must be between ${this.TARGETS.MIN} and ${this.TARGETS.MAX}`
+        `Targets count must be between ${this.targetsCount.MIN} and ${this.targetsCount.MAX}`
       )
     }
 
-    if (speed < this.SPEED.MIN || speed > this.SPEED.MAX) {
+    if (speed < this.speed.MIN || speed > this.speed.MAX) {
       throw new Error(
-        `Speed must be between ${this.SPEED.MIN} and ${this.SPEED.MAX}`
+        `Speed must be between ${this.speed.MIN} and ${this.speed.MAX}`
+      )
+    }
+
+    if (latency < 0 || latency > 1000) {
+      throw new Error(
+        `Latency must be between ${SIMULATION.LATENCY.MIN} and ${SIMULATION.LATENCY.MAX}`
       )
     }
 
@@ -140,6 +152,7 @@ class MockServer {
       this.initializeTargets({ count, speed })
 
       this.isRunning = true
+      this.latency = latency
       this.lastUpdateTime = Date.now()
       this.updateInterval = window.setInterval(() => {
         this.updateTargets()
@@ -158,7 +171,8 @@ class MockServer {
   }
 
   public async stop(): ServerResponse {
-    await randomDelay()
+    this.latency = SIMULATION.LATENCY.DEFAULT
+    await this.serverDelay()
 
     if (!this.isRunning) {
       throw new Error("Server is not running")
@@ -178,7 +192,7 @@ class MockServer {
   }
 
   public async getTargets(): ServerResponse<Target[]> {
-    await randomDelay()
+    await this.serverDelay()
 
     if (!this.isRunning) {
       throw new Error("Server is not running")
@@ -197,11 +211,12 @@ export const mockServer = new MockServer()
  * Запуск сервера
  */
 export const start = async ({
-  count = 10,
-  speed = 10,
+  count = SIMULATION.TARGETS.DEFAULT,
+  speed = SIMULATION.SPEED.DEFAULT,
+  latency = SIMULATION.LATENCY.DEFAULT,
 }: StartServerParams = {}): ServerResponse => {
   try {
-    return await mockServer.start({ count, speed })
+    return await mockServer.start({ count, speed, latency })
   } catch (error) {
     return {
       success: false,

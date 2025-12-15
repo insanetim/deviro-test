@@ -14,6 +14,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   const [count, setCount] = useState<number>(SIMULATION.TARGETS.DEFAULT)
   const [speed, setSpeed] = useState<number>(SIMULATION.SPEED.DEFAULT)
   const [offlineTimeout, setOfflineTimeout] = useState<number>(60)
+  const [latency, setLatency] = useState<number>(SIMULATION.LATENCY.DEFAULT)
   const [fps, setFps] = useState<number>(10)
 
   const handleOfflineTimeoutChange = (
@@ -31,6 +32,10 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
     setSpeed(newValue as number)
   }
 
+  const handleLatencyChange = (_: Event, newValue: number | number[]) => {
+    setLatency(newValue as number)
+  }
+
   const handleFpsChange = (_: Event, newValue: number | number[]) => {
     setFps(newValue as number)
   }
@@ -41,6 +46,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
       count,
       speed,
       offlineTimeout: offlineTimeout * 1000,
+      latency,
       fps,
     })
   }
@@ -73,7 +79,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
             </Typography>
             <Slider
               size="small"
-              step={1}
+              step={10}
               min={SIMULATION.TARGETS.MIN}
               max={SIMULATION.TARGETS.MAX}
               value={count}
@@ -91,7 +97,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
             </Typography>
             <Slider
               size="small"
-              step={1}
+              step={10}
               min={SIMULATION.SPEED.MIN}
               max={SIMULATION.SPEED.MAX}
               value={speed}
@@ -116,6 +122,24 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
               onChange={handleOfflineTimeoutChange}
               valueLabelDisplay="auto"
               valueLabelFormat={convertSeconds}
+            />
+          </Stack>
+
+          <Stack flex={1}>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              gutterBottom
+            >
+              Latency: {latency}
+            </Typography>
+            <Slider
+              size="small"
+              step={10}
+              min={SIMULATION.LATENCY.MIN}
+              max={SIMULATION.LATENCY.MAX}
+              value={latency}
+              onChange={handleLatencyChange}
             />
           </Stack>
 

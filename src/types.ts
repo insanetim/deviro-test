@@ -20,11 +20,13 @@ export type ServerResponse<T = void> = Promise<{
 export interface StartServerParams {
   count?: number
   speed?: number
+  latency?: number
 }
 
 export interface MapOptions {
   count: number
   speed: number
   offlineTimeout: number
+  latency: number
   fps: number
 }

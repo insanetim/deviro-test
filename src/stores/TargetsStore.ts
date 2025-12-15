@@ -21,19 +21,19 @@ export class TargetsStore {
   // For targets fetching
   isFetching: boolean = false
   fetchError: string | null = null
+  private fetchRequestId: number = 0
+  private lastProcessedTime: number = 0
+  private readonly MIN_UPDATE_INTERVAL: number = 100 // Process at least once every 100ms
 
   constructor() {
     makeAutoObservable(this)
-  }
-
-  private setServerIsRunning = (isRunning: boolean) => {
-    this.serverIsRunning = isRunning
   }
 
   startServer = async (options?: MapOptions) => {
     this.isLoading = true
     this.error = null
     this.targets = {}
+    this.fetchRequestId = 0
     if (
       options?.offlineTimeout !== undefined &&
       !isNaN(options.offlineTimeout) &&
@@ -46,9 +46,10 @@ export class TargetsStore {
       const response = await mockServer.start({
         count: options?.count,
         speed: options?.speed,
+        latency: options?.latency,
       })
       runInAction(() => {
-        this.setServerIsRunning(true)
+        this.serverIsRunning = true
         this.isLoading = false
       })
       return response
@@ -69,7 +70,7 @@ export class TargetsStore {
     try {
       const response = await mockServer.stop()
       runInAction(() => {
-        this.setServerIsRunning(false)
+        this.serverIsRunning = false
         this.isLoading = false
       })
       return response
@@ -89,15 +90,32 @@ export class TargetsStore {
       return { success: false, error: "Server is not running" }
     }
 
+    const currentRequestId = ++this.fetchRequestId
     this.isFetching = true
     this.fetchError = null
     const now = Date.now()
+    const timeSinceLastUpdate = now - this.lastProcessedTime
+    const shouldSkipUpdate = timeSinceLastUpdate < this.MIN_UPDATE_INTERVAL
 
     try {
       const response = await mockServer.getTargets()
+
+      // Skip processing if a newer request was made and we're still within the minimum update interval
+      if (currentRequestId !== this.fetchRequestId && shouldSkipUpdate) {
+        return { success: false, error: "Skipping intermediate update" }
+      }
+
       const normalizedResponse = normalizeTargets(response.data || [])
 
       runInAction(() => {
+        // Double-check request ID and update interval in case of race conditions
+        if (
+          currentRequestId !== this.fetchRequestId &&
+          Date.now() - this.lastProcessedTime < this.MIN_UPDATE_INTERVAL
+        ) {
+          return
+        }
+
         try {
           if (!response.success || !response.data) {
             this.targets = {}
@@ -145,6 +163,8 @@ export class TargetsStore {
           }
         } finally {
           this.isFetching = false
+          // Update last processed time
+          this.lastProcessedTime = Date.now()
         }
       })
 

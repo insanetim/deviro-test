@@ -3,14 +3,19 @@ export const SIMULATION = {
   FILTER_INTERVAL_MS: 1000,
   AREA_SIZE: 800,
   SPEED: {
-    MIN: 1,
-    MAX: 60,
+    MIN: 10,
+    MAX: 100,
     DEFAULT: 20,
   },
   TARGETS: {
-    MIN: 1,
-    MAX: 300,
+    MIN: 10,
+    MAX: 500,
     DEFAULT: 100,
+  },
+  LATENCY: {
+    MIN: 10,
+    MAX: 200,
+    DEFAULT: 20,
   },
 } as const
 
