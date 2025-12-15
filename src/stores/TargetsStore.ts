@@ -137,7 +137,6 @@ export class TargetsStore {
                 // Keep target but mark as offline
                 acc[key] = {
                   ...target,
-                  lastUpdated: now,
                   status: "offline" as const,
                 }
               }
