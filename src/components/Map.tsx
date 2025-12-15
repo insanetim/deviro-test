@@ -14,8 +14,8 @@ const Map: React.FC<MapProps> = ({ size = SIMULATION.AREA_SIZE }) => {
     <Box
       sx={{
         position: "relative",
-        border: "1px solid #232323",
-        borderRadius: 1,
+        borderRadius: 2,
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         overflow: "hidden",
       }}
     >

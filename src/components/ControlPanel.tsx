@@ -54,7 +54,15 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   return (
     <Paper
       component="form"
-      sx={{ width: "100%", p: 2 }}
+      sx={{
+        width: "100%",
+        py: 1,
+        px: 2,
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+        borderRadius: 2,
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+      }}
       onSubmit={handleSubmit}
     >
       <Stack

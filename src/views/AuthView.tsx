@@ -27,7 +27,20 @@ const AuthView = observer(() => {
   }
 
   return (
-    <Card sx={{ maxWidth: 500, width: "100%" }}>
+    <Card
+      sx={{
+        maxWidth: 500,
+        width: "100%",
+        boxShadow: "0 0 15px rgba(66, 165, 245, 0.3)",
+        "&:hover": {
+          boxShadow: "0 0 20px rgba(66, 165, 245, 0.4)",
+        },
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+        borderRadius: 2,
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+      }}
+    >
       <CardContent sx={{ p: 4 }}>
         <Typography
           variant="h5"
