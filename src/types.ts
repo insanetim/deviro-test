@@ -11,3 +11,14 @@ export type ServerResponse<T = void> = Promise<{
   data?: T
   error?: string
 }>
+
+export interface StartServerParams {
+  count?: number
+  speed?: number
+}
+
+export interface MapOptions {
+  count: number
+  speed: number
+  offlineTimeout: number
+}

@@ -1,7 +1,7 @@
 import { Paper, Slider, Stack, Typography } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import React, { useState } from "react"
-import type { MapOptions } from "../views/MapView"
+import type { MapOptions } from "../types"
 import { ControlButton } from "./ControlButton"
 
 interface ControlPanelProps {
@@ -9,7 +9,7 @@ interface ControlPanelProps {
 }
 
 const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
-  const [targetCount, setTargetCount] = useState<number>(100)
+  const [count, setCount] = useState<number>(100)
   const [speed, setSpeed] = useState<number>(10)
   const [offlineTimeout, setOfflineTimeout] = useState<number>(10)
 
@@ -32,7 +32,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   }
 
   const handleTargetCountChange = (_: Event, newValue: number | number[]) => {
-    setTargetCount(newValue as number)
+    setCount(newValue as number)
   }
 
   const handleSpeedChange = (_: Event, newValue: number | number[]) => {
@@ -42,7 +42,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
-      targetCount,
+      count,
       speed,
       offlineTimeout: offlineTimeout * 1000,
     })
@@ -72,14 +72,14 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
               color="textSecondary"
               gutterBottom
             >
-              Targets: {targetCount}
+              Targets: {count}
             </Typography>
             <Slider
               size="small"
               step={1}
               min={1}
               max={200}
-              value={targetCount}
+              value={count}
               onChange={handleTargetCountChange}
             />
           </Stack>

@@ -1,4 +1,4 @@
-import type { ServerResponse, Target } from "../types"
+import type { ServerResponse, StartServerParams, Target } from "../types"
 
 // Helper functions
 const toRadians = (degrees: number) => degrees * (Math.PI / 180)
@@ -33,10 +33,10 @@ class MockServer {
     this.targets = []
   }
 
-  private initializeTargets(
-    count: number = this.TARGETS.DEFAULT,
-    speed: number = this.SPEED.DEFAULT
-  ) {
+  private initializeTargets({
+    count = this.TARGETS.DEFAULT,
+    speed = this.SPEED.DEFAULT,
+  }: StartServerParams = {}) {
     for (let i = 0; i < count; i++) {
       this.targets.push(this.createRandomTarget(speed))
     }
@@ -114,35 +114,32 @@ class MockServer {
     })
   }
 
-  public async start(
-    initialTargets: number = this.TARGETS.DEFAULT,
-    initialSpeed: number = this.SPEED.DEFAULT
-  ): ServerResponse {
+  public async start({
+    count = this.TARGETS.DEFAULT,
+    speed = this.SPEED.DEFAULT,
+  }: StartServerParams = {}): ServerResponse {
     await randomDelay()
 
     if (this.isRunning) {
       throw new Error("Server is already running")
     }
 
-    if (
-      initialTargets < this.TARGETS.MIN ||
-      initialTargets > this.TARGETS.MAX
-    ) {
+    if (count < this.TARGETS.MIN || count > this.TARGETS.MAX) {
       throw new Error(
-        `Initial targets count must be between ${this.TARGETS.MIN} and ${this.TARGETS.MAX}`
+        `Targets count must be between ${this.TARGETS.MIN} and ${this.TARGETS.MAX}`
       )
     }
 
-    if (initialSpeed < this.SPEED.MIN || initialSpeed > this.SPEED.MAX) {
+    if (speed < this.SPEED.MIN || speed > this.SPEED.MAX) {
       throw new Error(
-        `Initial speed must be between ${this.SPEED.MIN} and ${this.SPEED.MAX}`
+        `Speed must be between ${this.SPEED.MIN} and ${this.SPEED.MAX}`
       )
     }
 
     try {
       this.targets = []
       this.targetCounter = 0
-      this.initializeTargets(initialTargets, initialSpeed)
+      this.initializeTargets({ count, speed })
 
       this.isRunning = true
       this.lastUpdateTime = Date.now()
@@ -196,17 +193,17 @@ class MockServer {
   }
 }
 
-const mockServer = new MockServer()
+export const mockServer = new MockServer()
 
 /**
  * Запуск сервера
  */
-export const start = async (
-  initialTargetsCount: number = 10,
-  initialSpeed: number = 10
-): ServerResponse => {
+export const start = async ({
+  count = 10,
+  speed = 10,
+}: StartServerParams = {}): ServerResponse => {
   try {
-    return await mockServer.start(initialTargetsCount, initialSpeed)
+    return await mockServer.start({ count, speed })
   } catch (error) {
     return {
       success: false,

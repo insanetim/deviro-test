@@ -3,12 +3,7 @@ import { observer } from "mobx-react-lite"
 import ControlPanel from "../components/ControlPanel"
 import Map from "../components/Map"
 import { useStores } from "../hooks/useStores"
-
-export interface MapOptions {
-  targetCount: number
-  speed: number
-  offlineTimeout: number
-}
+import type { MapOptions } from "../types"
 
 const MapView = observer(() => {
   const { targetsStore } = useStores()
@@ -87,13 +82,20 @@ const MapView = observer(() => {
   //   }
   // }, [])
 
-  const handleSubmit = (options: MapOptions) => {
+  const handleSubmit = async (options: MapOptions) => {
     console.log("Map options", options)
 
-    if (targetsStore.serverIsRunning) {
-      targetsStore.setServerIsRunning(false)
-    } else {
-      targetsStore.setServerIsRunning(true)
+    try {
+      if (targetsStore.serverIsRunning) {
+        await targetsStore.stopServer()
+      } else {
+        await targetsStore.startServer(options)
+        // Start polling for targets updates if needed
+        // You can implement this part based on your requirements
+      }
+    } catch (error) {
+      console.error("Error toggling server state:", error)
+      // You might want to show an error message to the user here
     }
   }
 
