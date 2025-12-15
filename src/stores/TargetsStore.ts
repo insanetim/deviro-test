@@ -9,26 +9,53 @@ const normalizeTargets = (targets: Target[]): Record<Target["id"], Target> => {
   }, {} as Record<Target["id"], Target>)
 }
 
+/**
+ * MobX store for managing targets and server state.
+ * Handles server connection, target updates, and offline/online status tracking.
+ */
 export class TargetsStore {
+  /** Whether the mock server is currently running */
   serverIsRunning: boolean = false
-  targets: Record<Target["id"], ExTarget> = {}
-  offlineTimeout: number = 60000
 
-  // For server operations (start/stop)
+  /** Map of target IDs to target objects */
+  targets: Record<Target["id"], ExTarget> = {}
+
+  /** Time in milliseconds before a target is considered offline */
+  offlineTimeout: number = 60000 // 1 minute default
+
+  // Server operation states
+  /** Whether a server operation is in progress */
   isLoading: boolean = false
+  /** Last error that occurred during server operations */
   error: string | null = null
 
-  // For targets fetching
+  // Target fetching states
+  /** Whether targets are currently being fetched */
   isFetching: boolean = false
+  /** Last error that occurred during target fetching */
   fetchError: string | null = null
-  private fetchRequestId: number = 0
-  private lastProcessedTime: number = 0
-  private readonly MIN_UPDATE_INTERVAL: number = 100 // Process at least once every 100ms
 
+  /** Counter for tracking fetch requests to handle race conditions */
+  private fetchRequestId: number = 0
+  /** Timestamp of the last successful target update */
+  private lastProcessedTime: number = 0
+  /** Minimum time in milliseconds between target updates (throttling) */
+  private readonly MIN_UPDATE_INTERVAL: number = 100
+
+  /**
+   * Initializes a new instance of the TargetsStore.
+   * Sets up MobX observables and actions.
+   */
   constructor() {
     makeAutoObservable(this)
   }
 
+  /**
+   * Starts the mock server with the specified options.
+   * @param options - Configuration options for the server
+   * @returns Promise that resolves when the server is started
+   * @throws Error if server fails to start
+   */
   startServer = async (options?: MapOptions) => {
     this.isLoading = true
     this.error = null
@@ -63,6 +90,11 @@ export class TargetsStore {
     }
   }
 
+  /**
+   * Stops the mock server and clears the targets.
+   * @returns Promise that resolves when the server is stopped
+   * @throws Error if server fails to stop
+   */
   stopServer = async () => {
     this.isLoading = true
     this.error = null
@@ -84,6 +116,12 @@ export class TargetsStore {
     }
   }
 
+  /**
+   * Fetches the current list of targets from the server.
+   * Handles throttling, offline detection, and state updates.
+   * @returns Promise that resolves with the server response
+   * @throws Error if fetching fails
+   */
   fetchTargets = async () => {
     if (!this.serverIsRunning) {
       this.targets = {}

@@ -28,10 +28,20 @@ class MockServer {
     this.targets = []
   }
 
+  /**
+   * Simulates network latency by delaying execution.
+   * @returns Promise that resolves after a random delay based on configured latency
+   */
   private async serverDelay() {
     return wait(withRandomness(this.latency, 25))
   }
 
+  /**
+   * Initializes the targets array with random targets.
+   * @param params - Configuration parameters
+   * @param params.count - Number of targets to create
+   * @param params.speed - Base speed for the targets
+   */
   private initializeTargets({
     count = this.targetsCount.DEFAULT,
     speed = this.speed.DEFAULT,
@@ -41,22 +51,31 @@ class MockServer {
     }
   }
 
+  /**
+   * Creates a new target with random position and direction.
+   * @param speed - Base speed for the target
+   * @returns A new target object with random properties
+   */
   private createRandomTarget(speed: number = this.speed.DEFAULT): Target {
     return {
       id: `t_${Date.now()}_${++this.targetCounter}`,
       x: randomInteger(0, this.areaSize),
       y: randomInteger(0, this.areaSize),
-      speed: withRandomness(speed, 30), // Add some randomness
+      speed: withRandomness(speed, 30), // Add some randomness to speed
       angle: randomInteger(0, 359),
     }
   }
 
+  /**
+   * Updates the positions and states of all targets.
+   * Handles movement, boundary collision detection, and random target removal.
+   */
   private updateTargets() {
     const now = Date.now()
     const deltaTimeMs = this.lastUpdateTime ? now - this.lastUpdateTime : 0
     this.lastUpdateTime = now
 
-    // Filter targets at specified interval
+    // Randomly remove some targets at specified intervals to simulate real-world conditions
     if (now - this.lastFilterTime > SIMULATION.FILTER_INTERVAL_MS) {
       this.targets = this.targets.filter(() => !chance(1))
       this.lastFilterTime = now
@@ -208,7 +227,12 @@ class MockServer {
 export const mockServer = new MockServer()
 
 /**
- * Запуск сервера
+ * Starts the mock server with the specified parameters.
+ * @param params - Server configuration
+ * @param params.count - Number of targets to create
+ * @param params.speed - Base speed for targets
+ * @param params.latency - Network latency simulation in milliseconds
+ * @returns Promise that resolves with the server response
  */
 export const start = async ({
   count = SIMULATION.TARGETS.DEFAULT,
@@ -226,7 +250,8 @@ export const start = async ({
 }
 
 /**
- * Остановка сервера
+ * Stops the mock server and cleans up resources.
+ * @returns Promise that resolves when the server is fully stopped
  */
 export const stop = async (): ServerResponse => {
   try {
@@ -240,7 +265,8 @@ export const stop = async (): ServerResponse => {
 }
 
 /**
- * Получение списка целей
+ * Retrieves the current list of targets from the server.
+ * @returns Promise that resolves with the current targets
  */
 export const getTargets = async (): ServerResponse<Target[]> => {
   try {
