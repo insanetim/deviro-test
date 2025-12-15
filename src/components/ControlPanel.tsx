@@ -51,7 +51,6 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   return (
     <Paper
       component="form"
-      elevation={2}
       sx={{ width: "100%", p: 2 }}
       onSubmit={handleSubmit}
     >
