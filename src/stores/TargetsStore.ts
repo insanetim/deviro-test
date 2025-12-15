@@ -1,10 +1,17 @@
 import { makeAutoObservable, runInAction } from "mobx"
 import { mockServer } from "../server/mockServer"
-import type { MapOptions, Target } from "../types"
+import type { ExTarget, MapOptions, Target } from "../types"
+
+const normalizeTargets = (targets: Target[]): Record<Target["id"], Target> => {
+  return targets.reduce((acc, target) => {
+    acc[target.id] = target
+    return acc
+  }, {} as Record<Target["id"], Target>)
+}
 
 export class TargetsStore {
   serverIsRunning: boolean = false
-  targets: Target[] = []
+  targets: Record<Target["id"], ExTarget> = {}
   offlineTimeout: number = 300000
 
   // For server operations (start/stop)
@@ -62,7 +69,7 @@ export class TargetsStore {
       const response = await mockServer.stop()
       runInAction(() => {
         this.setServerIsRunning(false)
-        this.targets = []
+        this.targets = {}
         this.isLoading = false
       })
       return response
@@ -78,21 +85,76 @@ export class TargetsStore {
 
   fetchTargets = async () => {
     if (!this.serverIsRunning) {
-      this.targets = []
+      this.targets = {}
       return { success: false, error: "Server is not running" }
     }
 
     this.isFetching = true
     this.fetchError = null
+    const now = Date.now()
 
     try {
       const response = await mockServer.getTargets()
+      const normalizedResponse = normalizeTargets(response.data || [])
+
       runInAction(() => {
-        if (response.success && response.data) {
-          this.targets = response.data
+        try {
+          if (!response.success || !response.data) {
+            this.targets = {}
+            return
+          }
+
+          // Handle empty response
+          if (Object.keys(normalizedResponse).length === 0) {
+            this.targets = {}
+            return
+          }
+
+          // Initial load
+          if (Object.keys(this.targets).length === 0) {
+            this.targets = Object.keys(normalizedResponse).reduce(
+              (acc, key) => {
+                acc[key] = {
+                  ...normalizedResponse[key],
+                  lastUpdated: now,
+                  status: "active" as const,
+                }
+                return acc
+              },
+              {} as Record<Target["id"], ExTarget>
+            )
+          } else {
+            // Update existing targets
+            this.targets = Object.keys(this.targets).reduce((acc, key) => {
+              if (normalizedResponse[key]) {
+                // Target is in the response - mark as active
+                acc[key] = {
+                  ...normalizedResponse[key],
+                  lastUpdated: now,
+                  status: "active" as const,
+                }
+              } else {
+                // Target is not in the response - check offline timeout
+                const target = this.targets[key]
+                if (now - target.lastUpdated >= this.offlineTimeout) {
+                  // Skip adding to acc - effectively removes the target
+                  return acc
+                }
+                // Keep target but mark as offline
+                acc[key] = {
+                  ...target,
+                  lastUpdated: now,
+                  status: "offline" as const,
+                }
+              }
+              return acc
+            }, {} as Record<Target["id"], ExTarget>)
+          }
+        } finally {
+          this.isFetching = false
         }
-        this.isFetching = false
       })
+
       return response
     } catch (error) {
       runInAction(() => {

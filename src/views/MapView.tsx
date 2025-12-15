@@ -1,101 +1,49 @@
 import { Stack } from "@mui/material"
 import { observer } from "mobx-react-lite"
+import { useCallback, useRef } from "react"
 import ControlPanel from "../components/ControlPanel"
 import Map from "../components/Map"
 import { useStores } from "../hooks/useStores"
 import type { MapOptions } from "../types"
 
+// Polling interval in milliseconds
+const POLLING_INTERVAL = 2000
+
 const MapView = observer(() => {
   const { targetsStore } = useStores()
+  const pollingIntervalRef = useRef<number | null>(null)
 
-  // const [targets, setTargets] = useState<Target[]>([])
-  // const [isRunning, setIsRunning] = useState(false)
-  // const [isLoading, setIsLoading] = useState(false)
-  // const [error, setError] = useState<string | null>(null)
-  // const intervalRef = useRef<number | null>(null)
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }, [])
 
-  // const startServer = async () => {
-  //   if (isRunning) return
+  const startPolling = useCallback(() => {
+    // Clear any existing interval
+    stopPolling()
 
-  //   setIsLoading(true)
-  //   setError(null)
+    // Initial fetch
+    targetsStore.fetchTargets().catch(console.error)
 
-  //   try {
-  //     const result = await start(5, 10) // 5 targets, speed 10
-  //     if (result.success) {
-  //       setIsRunning(true)
-  //       startPolling()
-  //     } else {
-  //       setError(result.error || "Failed to start server")
-  //     }
-  //   } catch (err) {
-  //     setError(err instanceof Error ? err.message : "Unknown error occurred")
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-  // const stopServer = () => {
-  //   stop()
-  //   setIsRunning(false)
-  //   if (intervalRef.current) {
-  //     clearInterval(intervalRef.current)
-  //     intervalRef.current = null
-  //   }
-  // }
-
-  // const startPolling = () => {
-  //   // Clear any existing interval
-  //   if (intervalRef.current) {
-  //     clearInterval(intervalRef.current)
-  //   }
-
-  //   // Initial fetch
-  //   fetchTargets()
-
-  //   // Set up polling
-  //   intervalRef.current = setInterval(fetchTargets, 500)
-  // }
-
-  // const fetchTargets = async () => {
-  //   try {
-  //     const result = await getTargets()
-  //     if (result.success) {
-  //       setTargets(prev => {
-  //         const newTargets = result.data || []
-  //         return JSON.stringify(prev) === JSON.stringify(newTargets)
-  //           ? prev
-  //           : newTargets
-  //       })
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching targets:", err)
-  //   }
-  // }
-
-  // // Cleanup on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     if (intervalRef.current) {
-  //       clearInterval(intervalRef.current)
-  //     }
-  //   }
-  // }, [])
+    // Set up polling
+    pollingIntervalRef.current = window.setInterval(() => {
+      targetsStore.fetchTargets().catch(console.error)
+    }, POLLING_INTERVAL)
+  }, [targetsStore, stopPolling])
 
   const handleSubmit = async (options: MapOptions) => {
-    console.log("Map options", options)
-
     try {
       if (targetsStore.serverIsRunning) {
+        stopPolling()
         await targetsStore.stopServer()
       } else {
         await targetsStore.startServer(options)
-        // Start polling for targets updates if needed
-        // You can implement this part based on your requirements
+        startPolling()
       }
     } catch (error) {
       console.error("Error toggling server state:", error)
-      // You might want to show an error message to the user here
     }
   }
 

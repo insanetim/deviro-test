@@ -1,6 +1,8 @@
+import { observer } from "mobx-react-lite"
 import { useEffect, useRef } from "react"
 
-const Targets = () => {
+const Targets = observer(() => {
+  // const { targetsStore } = useStores()
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -39,6 +41,6 @@ const Targets = () => {
       }}
     />
   )
-}
+})
 
 export default Targets

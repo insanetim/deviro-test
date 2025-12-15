@@ -6,6 +6,11 @@ export interface Target {
   angle: number // Angle in degrees (0 points to the right, increases clockwise)
 }
 
+export interface ExTarget extends Target {
+  lastUpdated: number
+  status: "active" | "offline"
+}
+
 export type ServerResponse<T = void> = Promise<{
   success: boolean
   data?: T
