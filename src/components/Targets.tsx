@@ -18,7 +18,8 @@ const Targets = observer(() => {
 
   const drawTargets = useCallback(
     (context: Konva.Context) => {
-      const targets = Object.values(targetsStore.targets)
+      // Convert Map values to array
+      const targets = Array.from(targetsStore.targets.values())
 
       targets.forEach(target => {
         // Save the current context state

@@ -2,11 +2,11 @@ import { makeAutoObservable, runInAction } from "mobx"
 import { mockServer } from "../server/mockServer"
 import type { ExTarget, MapOptions, Target } from "../types"
 
-const normalizeTargets = (targets: Target[]): Record<Target["id"], Target> => {
-  return targets.reduce((acc, target) => {
-    acc[target.id] = target
-    return acc
-  }, {} as Record<Target["id"], Target>)
+const normalizeTargets = (targets: Target[]): Map<Target["id"], Target> => {
+  return targets.reduce((map, target) => {
+    map.set(target.id, target)
+    return map
+  }, new Map<Target["id"], Target>())
 }
 
 /**
@@ -18,7 +18,7 @@ export class TargetsStore {
   serverIsRunning: boolean = false
 
   /** Map of target IDs to target objects */
-  targets: Record<Target["id"], ExTarget> = {}
+  targets = new Map<Target["id"], ExTarget>()
 
   /** Time in milliseconds before a target is considered offline */
   offlineTimeout: number = 60000 // 1 minute default
@@ -59,7 +59,7 @@ export class TargetsStore {
   startServer = async (options?: MapOptions) => {
     this.isLoading = true
     this.error = null
-    this.targets = {}
+    this.targets.clear()
     this.fetchRequestId = 0
     if (
       options?.offlineTimeout !== undefined &&
@@ -124,7 +124,7 @@ export class TargetsStore {
    */
   fetchTargets = async () => {
     if (!this.serverIsRunning) {
-      this.targets = {}
+      this.targets.clear()
       return { success: false, error: "Server is not running" }
     }
 
@@ -156,48 +156,46 @@ export class TargetsStore {
 
         try {
           if (!response.success || !response.data) {
-            this.targets = {}
+            this.targets.clear()
             return
           }
 
           // Initial load
-          if (Object.keys(this.targets).length === 0) {
-            this.targets = Object.keys(normalizedResponse).reduce(
-              (acc, key) => {
-                acc[key] = {
-                  ...normalizedResponse[key],
-                  lastUpdated: now,
-                  status: "active" as const,
-                }
-                return acc
-              },
-              {} as Record<Target["id"], ExTarget>
-            )
+          if (this.targets.size === 0) {
+            const newMap = new Map<Target["id"], ExTarget>()
+            for (const [id, target] of normalizedResponse.entries()) {
+              newMap.set(id, {
+                ...target,
+                lastUpdated: now,
+                status: "active" as const,
+              })
+            }
+            this.targets = newMap
           } else {
             // Update existing targets
-            this.targets = Object.keys(this.targets).reduce((acc, key) => {
-              if (normalizedResponse[key]) {
+            const updatedMap = new Map<Target["id"], ExTarget>()
+            for (const [id, target] of this.targets.entries()) {
+              if (normalizedResponse.has(id)) {
                 // Target is in the response - mark as active
-                acc[key] = {
-                  ...normalizedResponse[key],
+                updatedMap.set(id, {
+                  ...normalizedResponse.get(id)!,
                   lastUpdated: now,
                   status: "active" as const,
-                }
+                })
               } else {
                 // Target is not in the response - check offline timeout
-                const target = this.targets[key]
                 if (now - target.lastUpdated >= this.offlineTimeout) {
-                  // Skip adding to acc - effectively removes the target
-                  return acc
+                  // Skip adding to updatedMap - effectively removes the target
+                  continue
                 }
                 // Keep target but mark as offline
-                acc[key] = {
+                updatedMap.set(id, {
                   ...target,
                   status: "offline" as const,
-                }
+                })
               }
-              return acc
-            }, {} as Record<Target["id"], ExTarget>)
+            }
+            this.targets = updatedMap
           }
         } finally {
           this.isFetching = false
