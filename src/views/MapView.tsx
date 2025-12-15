@@ -7,7 +7,7 @@ import { useStores } from "../hooks/useStores"
 import type { MapOptions } from "../types"
 
 // Polling interval in milliseconds
-const POLLING_INTERVAL = 2000
+const POLLING_INTERVAL = 1000
 
 const MapView = observer(() => {
   const { targetsStore } = useStores()

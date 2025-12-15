@@ -33,6 +33,7 @@ export class TargetsStore {
   startServer = async (options?: MapOptions) => {
     this.isLoading = true
     this.error = null
+    this.targets = {}
     if (
       options?.offlineTimeout !== undefined &&
       !isNaN(options.offlineTimeout) &&
@@ -69,7 +70,6 @@ export class TargetsStore {
       const response = await mockServer.stop()
       runInAction(() => {
         this.setServerIsRunning(false)
-        this.targets = {}
         this.isLoading = false
       })
       return response
@@ -100,12 +100,6 @@ export class TargetsStore {
       runInAction(() => {
         try {
           if (!response.success || !response.data) {
-            this.targets = {}
-            return
-          }
-
-          // Handle empty response
-          if (Object.keys(normalizedResponse).length === 0) {
             this.targets = {}
             return
           }
