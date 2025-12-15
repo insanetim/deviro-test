@@ -2,6 +2,7 @@ import { Paper, Slider, Stack, Typography } from "@mui/material"
 import { observer } from "mobx-react-lite"
 import React, { useState } from "react"
 import { SIMULATION } from "../constants"
+import { convertSeconds } from "../lib/convertSeconds"
 import type { MapOptions } from "../types"
 import { ControlButton } from "./ControlButton"
 
@@ -13,23 +14,13 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
   const [count, setCount] = useState<number>(SIMULATION.TARGETS.DEFAULT)
   const [speed, setSpeed] = useState<number>(SIMULATION.SPEED.DEFAULT)
   const [offlineTimeout, setOfflineTimeout] = useState<number>(60)
+  const [fps, setFps] = useState<number>(10)
 
   const handleOfflineTimeoutChange = (
     _: Event,
     newValue: number | number[]
   ) => {
     setOfflineTimeout(newValue as number)
-  }
-
-  const formatOfflineTimeout = (seconds: number) => {
-    if (seconds < 60) {
-      return `${seconds}s`
-    }
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return remainingSeconds > 0
-      ? `${minutes}m ${remainingSeconds}s`
-      : `${minutes}m`
   }
 
   const handleTargetCountChange = (_: Event, newValue: number | number[]) => {
@@ -40,12 +31,17 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
     setSpeed(newValue as number)
   }
 
+  const handleFpsChange = (_: Event, newValue: number | number[]) => {
+    setFps(newValue as number)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
       count,
       speed,
       offlineTimeout: offlineTimeout * 1000,
+      fps,
     })
   }
 
@@ -109,7 +105,7 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
               color="textSecondary"
               gutterBottom
             >
-              Offline timeout: {formatOfflineTimeout(offlineTimeout)}
+              Offline: {convertSeconds(offlineTimeout)}
             </Typography>
             <Slider
               size="small"
@@ -119,7 +115,25 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ onSubmit }) => {
               value={offlineTimeout}
               onChange={handleOfflineTimeoutChange}
               valueLabelDisplay="auto"
-              valueLabelFormat={formatOfflineTimeout}
+              valueLabelFormat={convertSeconds}
+            />
+          </Stack>
+
+          <Stack flex={1}>
+            <Typography
+              variant="body2"
+              color="textSecondary"
+              gutterBottom
+            >
+              FPS: {fps}
+            </Typography>
+            <Slider
+              size="small"
+              step={1}
+              min={1}
+              max={25}
+              value={fps}
+              onChange={handleFpsChange}
             />
           </Stack>
         </Stack>

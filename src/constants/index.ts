@@ -1,10 +1,10 @@
 export const SIMULATION = {
-  UPDATE_INTERVAL_MS: 100,
+  UPDATE_INTERVAL_MS: 10,
   FILTER_INTERVAL_MS: 1000,
   AREA_SIZE: 800,
   SPEED: {
     MIN: 1,
-    MAX: 50,
+    MAX: 60,
     DEFAULT: 20,
   },
   TARGETS: {
@@ -13,8 +13,6 @@ export const SIMULATION = {
     DEFAULT: 100,
   },
 } as const
-
-export const POLLING_INTERVAL = 300
 
 export const TARGET_SIZE = 10
 export const TARGET_ACTIVE_COLOR = "#ff4444"

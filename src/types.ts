@@ -26,4 +26,5 @@ export interface MapOptions {
   count: number
   speed: number
   offlineTimeout: number
+  fps: number
 }

@@ -8,7 +8,7 @@ const chance = (percent: number): boolean => Math.random() * 100 < percent
 const randomInteger = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min + 1)) + min
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-const randomDelay = (min: number = 100, max: number = 200) =>
+const randomDelay = (min: number = 10, max: number = 20) =>
   wait(randomInteger(min, max))
 
 class MockServer {
