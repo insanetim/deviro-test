@@ -3,10 +3,10 @@ import { Group, Shape as KonvaShape, Layer, Stage } from "react-konva"
 import { useStores } from "../hooks/useStores"
 import type { ExTarget } from "../types"
 
-const TARGET_SIZE = 10 // Size of the triangle
+const TARGET_SIZE = 10 // Diameter of the target dot
 const ACTIVE_COLOR = "#ff4444" // Red for active targets
 const OFFLINE_COLOR = "#888888" // Grey for offline targets
-const BORDER_COLOR = "#ffffff" // White border for better visibility
+const BORDER_COLOR = "#ffffff" // White border and angle indicator color
 
 interface TargetShapeProps {
   target: ExTarget
@@ -15,42 +15,34 @@ interface TargetShapeProps {
 const TargetShape = ({ target }: TargetShapeProps) => {
   const color = target.status === "active" ? ACTIVE_COLOR : OFFLINE_COLOR
 
-  // Triangle dimensions
-  const triangleWidth = TARGET_SIZE * 2.5
-  const triangleHeight = TARGET_SIZE * 1.5
-
-
+  const radius = TARGET_SIZE / 2
 
   return (
-    <Group x={target.x} y={target.y}>
+    <Group>
       <Group
-        x={0}
-        y={0}
-        rotation={target.angle} // Point in the direction of movement
+        x={target.x}
+        y={target.y}
+        rotation={target.angle}
       >
         <KonvaShape
-          sceneFunc={(context) => {
-            // Draw the main triangle (pointing right by default)
+          sceneFunc={context => {
+            // Draw the target dot
             context.beginPath()
-            context.moveTo(triangleWidth, triangleHeight / 2)  // Right point
-            context.lineTo(0, 0)                                // Top left
-            context.lineTo(0, triangleHeight)                  // Bottom left
-            context.closePath()
-            // Fill the triangle
+            context.arc(0, 0, radius, 0, Math.PI * 2)
             context.fillStyle = color
             context.fill()
+
             // Draw the border
             context.strokeStyle = BORDER_COLOR
             context.lineWidth = 1.5
             context.stroke()
 
-            // Draw a small circle at the right vertex to indicate rotation
+            // Draw angle indicator line
             context.beginPath()
-            context.arc(triangleWidth, triangleHeight / 2, 3, 0, Math.PI * 2)
-            context.fillStyle = 'white'
-            context.fill()
+            context.moveTo(0, 0)
+            context.lineTo(radius * 1.5, 0)
             context.strokeStyle = BORDER_COLOR
-            context.lineWidth = 1
+            context.lineWidth = 1.5
             context.stroke()
           }}
         />
